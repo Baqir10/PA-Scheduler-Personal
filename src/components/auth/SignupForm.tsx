@@ -128,6 +128,12 @@ export const SignupForm = () => {
         const { error: logOutError } = await supabase.auth.signOut();
       // Explicitly navigate to auth page
         if (logOutError) throw logOutError;
+        setWorkerEmail("");
+        setWorkerPassword("");
+        setWorkerFirstName("");
+        setWorkerLastName("");
+        setOrganizationEmail("");
+        setEmploymentType("full-time");
         navigate("/", { replace: true });
       }
     } catch (error: any) {
