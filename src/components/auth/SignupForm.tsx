@@ -24,7 +24,6 @@ export const SignupForm = () => {
   const handleOrgSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       // NOTE: For testing purposes, fake emails are allowed.
       // To enforce real emails, enable email confirmation in Supabase Auth settings.
@@ -34,7 +33,7 @@ export const SignupForm = () => {
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
-            is_admin: true,
+            is_org: true,
             organization_name: orgName,
           },
         },
@@ -51,10 +50,11 @@ export const SignupForm = () => {
       setOrgPassword("");
       setOrgName("");
     } catch (error: any) {
+      console.log(error);
       toast({
         variant: "destructive",
         title: "Signup failed",
-        description: error.message,
+        description: error,
       });
     } finally {
       setLoading(false);
@@ -104,7 +104,7 @@ export const SignupForm = () => {
           organization_id: orgData.id,
           status: "pending",
           is_full_time: employmentType === "full-time",
-          is_admin: false,
+          is_org: false,
         });
 
         if (workerError) throw workerError;
