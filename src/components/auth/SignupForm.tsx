@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 export const SignupForm = () => {
+  const navigate = useNavigate();
   const [orgEmail, setOrgEmail] = useState("");
   const [orgPassword, setOrgPassword] = useState("");
   const [orgName, setOrgName] = useState("");
@@ -27,7 +29,7 @@ export const SignupForm = () => {
     try {
       // NOTE: For testing purposes, fake emails are allowed.
       // To enforce real emails, enable email confirmation in Supabase Auth settings.
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: orgEmail,
         password: orgPassword,
         options: {
@@ -39,7 +41,15 @@ export const SignupForm = () => {
         },
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+
+      const { error: orgError } = await supabase.from("organizations").insert({
+          id: signUpData.user.id,
+          email: orgEmail,
+          name: orgName,
+      });
+
+      if (orgError) throw orgError;
 
       toast({
         title: "Organization created!",
@@ -88,7 +98,7 @@ export const SignupForm = () => {
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
-            is_admin: false,
+            is_org: false,
           },
         },
       });
@@ -104,7 +114,7 @@ export const SignupForm = () => {
           organization_id: orgData.id,
           status: "pending",
           is_full_time: employmentType === "full-time",
-          is_org: false,
+          is_admin: false,
         });
 
         if (workerError) throw workerError;
@@ -115,12 +125,10 @@ export const SignupForm = () => {
           duration: 5000,
         });
 
-        setWorkerEmail("");
-        setWorkerPassword("");
-        setWorkerFirstName("");
-        setWorkerLastName("");
-        setOrganizationEmail("");
-        setEmploymentType("full-time");
+        const { error: logOutError } = await supabase.auth.signOut();
+      // Explicitly navigate to auth page
+        if (logOutError) throw logOutError;
+        navigate("/", { replace: true });
       }
     } catch (error: any) {
       toast({
